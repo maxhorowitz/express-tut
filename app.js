@@ -1,47 +1,22 @@
-const express = require('express');
+const express = require('express')
 const app = express()
-const logger = require('./logger')
-const authorize = require('./authorize')
 
-// req => middleware => res
+// router objects
+const people = require('./routes/people')
+const auth = require('./routes/auth')
 
-// PUT ALL OF THE MIDDLEWARE AT THE TOP OR THEY ARE NOT INCLUDED
-// IN THE DEFINITIONS ABOVE THEM
+// static assets
+app.use(express.static('./methods-public'))
 
-// app.use adds a new middlware to the app that is
-// executed between all req and res, and it is applied
-// in all later defined app.get( ) definitions
-app.use([logger, authorize])
+// parse form data
+app.use(express.urlencoded({ extended: false }))
 
-// THE ORDER OF MIDDLEWARE FUNCTIONS IN ARRAY MATTERS!!!
+// parse json
+app.use(express.json())
 
-// the following only adds the middleware to anything that comes after
-// the provided path (which in this case is '/api')
-// app.use('/api', logger)
-
-app.get('/', (req, res) => { // logger will take place before
-    // res returns 'Home' in this case because we have added 
-    // it in app.use(logger) above
-    res.send('Home')
-})
-
-app.get('/about', (req, res) => {
-    res.send('About')
-})
-
-app.get('/api/products', (req, res) => {
-    res.send('Products')
-})
-
-app.get('/api/items', (req, res) => {
-    // middleware hidden in other modules is super cool because 
-    // it can help us create (and expose for later use) attributes
-    // of a request -- in this example, in 'authorize' we create the
-    // user attribute as part of query string and we are now able
-    // to log which user wants to navigate to the items page
-    console.log(req.user)
-    res.send('Items')
-})
+// connect router objects to their corresponding paths
+app.use('/api/people', people)
+app.use('/login', auth)
 
 app.listen(5000, () => {
     console.log('server is listening on port 5000...')
